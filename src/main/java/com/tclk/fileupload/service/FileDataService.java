@@ -1,5 +1,6 @@
 package com.tclk.fileupload.service;
 
+import com.tclk.fileupload.dto.FileInfo;
 import com.tclk.fileupload.entity.FileData;
 import com.tclk.fileupload.repository.FileDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -76,6 +79,33 @@ public class FileDataService {
             throw new FileNotFoundException("File not found: " + fileName);
         }
         return Files.readAllBytes(new File(fileData.getFilePath()).toPath());
+    }
+
+    public List<FileInfo> getAllImage(){
+        List<FileInfo> fileInfos = new ArrayList<>();
+        List<FileData> fileDataList = fileDataRepository.findAll();
+        fileDataList.forEach(fileData -> {
+            try {
+                byte[] image = Files.readAllBytes(new File(fileData.getFilePath()).toPath());
+                FileInfo fn = new FileInfo(fileData.getFileName(),fileData.getFilePath(),image);
+                fileInfos.add(fn);
+            }
+            catch (IOException e) {
+                throw new RuntimeException("Error reading file" + fileData.getFileName(),e);
+            }
+        });
+        return fileInfos;
+    }
+
+    public void deleteByName(String fileName){
+        FileData fileData = fileDataRepository.findByName(fileName)
+                .orElseThrow(()-> new RuntimeException("File not found" + fileName));
+
+        File file = new File(fileData.getFilePath());
+        if(file.exists() && !file.delete()){
+            throw new RuntimeException("Unable to delete file: " + fileName);
+        }
+        fileDataRepository.delete(fileData);
     }
 
 

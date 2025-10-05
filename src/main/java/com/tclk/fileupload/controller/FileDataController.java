@@ -1,5 +1,6 @@
 package com.tclk.fileupload.controller;
 
+import com.tclk.fileupload.dto.FileInfo;
 import com.tclk.fileupload.message.ResponseMessage;
 import com.tclk.fileupload.service.FileDataService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 public class FileDataController {
@@ -40,5 +42,24 @@ public class FileDataController {
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.valueOf("image/png"))
                 .body(imageData);
+    }
+
+    @GetMapping("/fileSystem")
+    public ResponseEntity<?> getAllImages() throws IOException {
+        List<FileInfo> fileInfoList = fileDataService.getAllImage();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(fileInfoList);
+    }
+
+    @DeleteMapping("fileName/{fileName}")
+    public ResponseEntity<?> deleteFileByName(@PathVariable String fileName) {
+        try {
+            fileDataService.deleteByName(fileName);
+            return ResponseEntity.ok("File deleted successfully!");
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Could not delete file: " + e.getMessage());
+        }
     }
 }
